@@ -4,6 +4,7 @@ namespace App\Http\Resources\Image;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Illuminate\Support\Str;
 
 class ImageResource extends JsonResource
 {
@@ -11,9 +12,7 @@ class ImageResource extends JsonResource
     {
         return [
             'id' => $this->id,
-            'url' => $this->url,
-            'imageable_id' => $this->imageable_id,
-            'imageable_type' => $this->imageable_type,
+            'url' => Str::startsWith($this->url, 'http') ? $this->url : asset('storage/' . $this->url),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

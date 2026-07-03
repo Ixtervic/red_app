@@ -3,62 +3,23 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Image\StoreImageRequest;
-use App\Http\Requests\Image\UpdateImageRequest;
-use App\Http\Resources\Image\ImageCollection;
-use App\Http\Resources\Image\ImageResource;
 use App\Models\Image;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Storage;
 
 class ImageController extends Controller
 {
-    public function index(): ImageCollection
+    public function destroy($id): JsonResponse
     {
-        $images = Image::with('imageable')->paginate(20);
+        $image = Image::find($id);
 
-        return ImageCollection::make($images);
-    }
+        if (!$image) {
+            return response()->json([
+                'message' => 'Imagen no encontrada',
+            ], 404);
+        }
 
-    public function store(StoreImageRequest $request): JsonResponse
-    {
-        $validated = $request->validated();
-
-        $user = $request->user();
-
-        $validated['imageable_id'] = $user->id;
-        $validated['imageable_type'] = $user->getMorphClass();
-
-        $image = Image::create($validated);
-
-        return response()->json([
-            'message' => 'Image created successfully.',
-            'data' => ImageResource::make($image),
-        ], 201);
-    }
-
-    public function show(Image $image): JsonResponse
-    {
-        $image->load('imageable');
-
-        return response()->json([
-            'data' => ImageResource::make($image),
-        ]);
-    }
-
-    public function update(UpdateImageRequest $request, Image $image): JsonResponse
-    {
-        $validated = $request->validated();
-
-        $image->update($validated);
-
-        return response()->json([
-            'message' => 'Image updated successfully.',
-            'data' => ImageResource::make($image),
-        ]);
-    }
-
-    public function destroy(Image $image): JsonResponse
-    {
+        Storage::disk('public')->delete($image->url);
         $image->delete();
 
         return response()->json(null, 204);

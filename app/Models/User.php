@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class User extends Model
 {
@@ -16,15 +16,8 @@ class User extends Model
         'phone',
     ];
 
-    protected $appends = ['image_url'];
-
-    public function image(): MorphOne
+    public function images(): MorphMany
     {
-        return $this->morphOne(Image::class, 'imageable');
-    }
-
-    public function getImageUrlAttribute(): ?string
-    {
-        return $this->image ? asset('storage/' . $this->image->url) : null;
+        return $this->morphMany(Image::class, 'imageable')->oldest();
     }
 }
