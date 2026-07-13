@@ -15,18 +15,16 @@ COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Dependencias PHP
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-interaction
-
-# Dependencias Node
-COPY package*.json ./
-RUN npm install
-
-# Copiar el resto del proyecto
+# Copiar TODO el proyecto
 COPY . .
 
-# Compilar assets
+# Composer
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Node
+RUN npm install
+
+# Vite
 RUN npm run build
 
 RUN chmod -R 775 storage bootstrap/cache
