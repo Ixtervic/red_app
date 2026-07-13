@@ -18,6 +18,14 @@ WORKDIR /var/www/html
 # Copiar TODO el proyecto
 COPY . .
 
+RUN mkdir -p storage/framework/cache \
+    storage/framework/sessions \
+    storage/framework/views \
+    storage/framework/testing \
+    bootstrap/cache
+
+RUN chmod -R 775 storage bootstrap/cache
+
 # Composer
 RUN composer install --no-dev --optimize-autoloader --no-interaction
 
@@ -31,6 +39,9 @@ RUN chmod -R 775 storage bootstrap/cache
 
 EXPOSE 10000
 
-CMD php artisan storage:link || true && \
+CMD php artisan config:clear && \
+    php artisan cache:clear && \
+    php artisan view:clear && \
+    php artisan storage:link || true && \
     php artisan migrate --force && \
     php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
