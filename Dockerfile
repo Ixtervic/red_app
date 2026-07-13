@@ -1,6 +1,5 @@
 FROM php:8.3-cli
 
-# Dependencias del sistema
 RUN apt-get update && apt-get install -y \
     git \
     unzip \
@@ -12,30 +11,28 @@ RUN apt-get update && apt-get install -y \
     npm \
     && docker-php-ext-install pdo pdo_pgsql zip
 
-# Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
 WORKDIR /var/www/html
 
-# Copiar archivos
-COPY . .
+# Dependencias PHP
+COPY composer.json composer.lock ./
+RUN composer install --no-dev --optimize-autoloader --no-interaction
 
-# Instalar dependencias PHP
-RUN composer install --no-dev --optimize-autoloader
-
-# Instalar dependencias Node
+# Dependencias Node
+COPY package*.json ./
 RUN npm install
 
-# Compilar Vite
+# Copiar el resto del proyecto
+COPY . .
+
+# Compilar assets
 RUN npm run build
 
-# Permisos
 RUN chmod -R 775 storage bootstrap/cache
 
-# Puerto de Render
 EXPOSE 10000
 
-# Arranque
-CMD php artisan migrate --force && \
-    php artisan storage:link || true && \
-    php artisan serve --host=0.0.0.0 --port=$PORT
+CMD php artisan storage:link || true && \
+    php artisan migrate --force && \
+    php artisan serve --host=0.0.0.0 --port=${PORT:-10000}
